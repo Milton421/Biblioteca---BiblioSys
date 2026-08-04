@@ -1,113 +1,83 @@
-# BiblioSys - Sistema de Gestión de Biblioteca
+# BiblioSys
 
-BiblioSys es un sistema web moderno diseñado para la administración integral de bibliotecas. Permite la digitalización del catálogo de libros, control de existencias en tiempo real, registro de socios, gestión de préstamos y automatización del cálculo de penalizaciones por entregas tardías.
+> Sistema web moderno e intuitivo para la gestión integral de bibliotecas, control de inventario de libros, registro de socios, préstamos y seguimiento de multas.
 
-**Aplicación en Producción:** [https://biblioteca-biblio-sys.vercel.app](https://biblioteca-biblio-sys.vercel.app)
-
----
-
-## Módulos y Funcionalidades
-
-### Panel de Control - Dashboard
-- Visualización de métricas generales: total de libros, préstamos activos, socios registrados y saldo en multas pendientes.
-- Listado de actividad reciente con estado de transacciones en tiempo real.
-
-### Catálogo de Libros
-- Administración completa de libros (Crear, Leer, Actualizar, Eliminar).
-- Clasificación por categorías temáticas.
-- Control automatizado de stock total y copias disponibles.
-- Búsqueda dinámicas por título, autor o código ISBN.
-
-### Administración de Socios
-- Registro de usuarios con datos de contacto (correo, teléfono, dirección).
-- Seguimiento de estado de socios activos en la plataforma.
-
-### Préstamos y Devoluciones
-- Registro de salidas de libros asociadas a socios.
-- Cálculo automático de fecha límite de entrega según el plazo seleccionado.
-- Actualización inmediata del inventario disponible al realizar devoluciones.
-
-### Control de Multas
-- Cálculo automatizado de tarifas por días de retraso en la devolución de ejemplares.
-- Gestión de cobros y cambio de estado de multas pendientes a pagadas.
+[🌐 Ver Aplicación en Producción](https://biblioteca-biblio-sys.vercel.app)
 
 ---
 
-## Arquitectura y Tecnologías
+## ⚡ Características
 
-### Frontend
-- **HTML5 & CSS3:** Interfaz semántica con variables CSS y diseño adaptativo.
-- **JavaScript (ES6+):** Arquitectura de Aplicación de Página Única (SPA) mediante consumo asíncrono de la API REST con `Fetch API`.
-
-### Backend
-- **Python / Flask:** API RESTful modular para el procesamiento de reglas de negocio y endpoints.
-- **pg8000 & PyMySQL:** Conectores de base de datos ligeros compatibles con entornos serverless.
-
-### Base de Datos e Infraestructura
-- **Supabase (PostgreSQL):** Persistencia relacional en entorno de producción.
-- **Vercel:** Plataforma de despliegue continuo y ejecución serverless.
+- **Dashboard General:** Resumen ejecutivo de métricas clave y actividad reciente.
+- **Catálogo de Libros:** Control de inventario, disponibilidad en tiempo real y filtrado por categorías.
+- **Gestión de Socios:** Control de registro y estado de miembros de la biblioteca.
+- **Préstamos y Devoluciones:** Automatización de plazos de entrega y actualización inmediata de existencias.
+- **Control de Multas:** Cálculo y seguimiento de penalizaciones por devoluciones tardías.
 
 ---
 
-## Estructura del Proyecto
+## 🛠️ Stack Tecnológico
+
+| Capa | Tecnología |
+| --- | --- |
+| **Frontend** | HTML5, CSS3, JavaScript Vanilla (SPA) |
+| **Backend** | Python (Flask REST API) |
+| **Base de Datos** | Supabase (PostgreSQL) / MySQL |
+| **Despliegue** | Vercel |
+
+---
+
+## 📂 Estructura del Proyecto
 
 ```text
 biblioteca/
-├── app.py                  # Aplicación principal Flask y definición de rutas API
-├── database.py             # Conexión y abstracción para PostgreSQL y MySQL
-├── schema_supabase.sql     # Definición de tablas y datos semilla para PostgreSQL (Supabase)
-├── schema.sql              # Definición de tablas para MySQL
-├── vercel.json             # Configuración de rutas para la plataforma Vercel
-├── requirements.txt        # Dependencias del proyecto en Python
-├── index.html              # Plantilla y estructura de la interfaz cliente (SPA)
-└── static/
+├── app.py                  # API RESTful en Flask y definición de endpoints
+├── database.py             # Capa de abstracción y conexión a PostgreSQL / MySQL
+├── schema_supabase.sql     # Estructura DDL y datos semilla para Supabase (PostgreSQL)
+├── schema.sql              # Estructura DDL para bases de datos MySQL
+├── vercel.json             # Configuración de rutas y despliegue para Vercel
+├── requirements.txt        # Librerías y dependencias de Python
+├── index.html              # Interfaz de usuario principal (Single Page Application)
+└── static/                 # Recursos estáticos del sistema
     ├── css/
-    │   └── style.css       # Hoja de estilos de la interfaz
+    │   └── style.css       # Hoja de estilos global y diseño responsivo
     ├── js/
-    │   └── main.js         # Lógica cliente, navegación SPA e interacción con la API
-    └── favicon.svg         # Identificador visual del sistema
+    │   └── main.js         # Lógica del cliente, controladores SPA y Fetch API
+    └── favicon.svg         # Icono oficial de la aplicación
 ```
 
 ---
 
-## Configuración e Instalación Local
+## 💻 Instalación y Ejecución Local
 
-### Requisitos Previos
-- Python 3.9 o superior.
-- Git.
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/Milton421/Biblioteca---BiblioSys.git
+cd Biblioteca---BiblioSys
+```
 
-### Pasos de Instalación
+### 2. Crear y activar entorno virtual (Opcional)
+```bash
+# En Windows (PowerShell):
+python -m venv venv
+.\venv\Scripts\activate
 
-1. **Clonar el repositorio:**
-   ```bash
-   git clone https://github.com/Milton421/Biblioteca---BiblioSys.git
-   cd Biblioteca---BiblioSys
-   ```
+# En Linux / macOS:
+python3 -m venv venv
+source venv/bin/activate
+```
 
-2. **Instalar dependencias:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 3. Instalar dependencias
+```bash
+pip install -r requirements.txt
+```
 
-3. **Iniciar el servidor de desarrollo:**
-   ```bash
-   python app.py
-   ```
+### 4. Iniciar la aplicación
+```bash
+python app.py
+```
 
-4. **Acceder a la aplicación:**
-   Abre tu navegador e ingresa a `http://127.0.0.1:5050`.
-
----
-
-## Variables de Entorno
-
-El sistema detecta automáticamente las variables inyectadas por Vercel para Supabase. En caso de requerir configuración manual, se utilizan las siguientes variables:
-
-- `POSTGRES_URL`: Cadena de conexión completa a PostgreSQL.
-- `DB_HOST`: Host del servidor de base de datos MySQL.
-- `DB_USER`: Usuario autenticado.
-- `DB_PASSWORD`: Contraseña de acceso.
-- `DB_NAME`: Nombre de la base de datos.
+Accede desde tu navegador en: `http://127.0.0.1:5050`
 
 ---
 
