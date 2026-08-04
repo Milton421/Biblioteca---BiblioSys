@@ -851,12 +851,34 @@ tr:hover td {
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes slideUpIndicator {
+    0% {
+        transform: translate(-50%, 100%) scaleY(0);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(-50%, 0) scaleY(1);
+        opacity: 1;
+    }
+}
+
 @media (max-width: 900px) {
     .sidebar { width: 68px; }
     .brand-text, .nav-item a span, .sidebar-footer span, .sidebar-nav-section { display: none; }
     .main-content { margin-left: 68px; max-width: calc(100vw - 68px); }
     .navbar-top { padding: 0 1.5rem; }
     .content-body { padding: 1.5rem; }
+
+    .nav-item.active a::before {
+        left: 50%;
+        top: auto;
+        bottom: 0;
+        transform: translateX(-50%);
+        width: 24px;
+        height: 3.5px;
+        border-radius: 3px 3px 0 0;
+        animation: slideUpIndicator 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
 }
 
 @media (max-width: 768px) {
@@ -961,11 +983,25 @@ tr:hover td {
 
     .nav-item {
         margin: 0;
+        position: relative;
     }
 
     .nav-item a {
         padding: 0.6rem 0.8rem;
         border-radius: var(--radius-sm);
+        position: relative;
+    }
+
+    .nav-item.active a::before {
+        left: 50%;
+        top: auto;
+        bottom: 0;
+        transform: translateX(-50%);
+        width: 32px;
+        height: 4px;
+        border-radius: 4px 4px 0 0;
+        animation: slideUpIndicator 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        background: var(--primary-blue);
     }
 
     .main-content {
