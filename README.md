@@ -62,6 +62,3 @@ biblioteca/
 
 ---
 
-## 📝 Licencia
-
-Desarrollado para la gestión eficiente y modernización de bibliotecas.
