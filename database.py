@@ -1,12 +1,12 @@
 import os
-import urllib.parse
+import ssl
+from urllib.parse import urlparse
 
-# Soporte dual para PostgreSQL (Supabase) y MySQL (Local/Aiven)
-IS_POSTGRES = False
+# Driver de PostgreSQL en Python Puro (compatible 100% con Vercel sin C-libraries)
+IS_PG8000 = False
 try:
-    import psycopg2
-    import psycopg2.extras
-    IS_POSTGRES = True
+    import pg8000.dbapi
+    IS_PG8000 = True
 except ImportError:
     pass
 
@@ -14,7 +14,7 @@ import pymysql
 import pymysql.cursors
 
 def is_supabase_enabled():
-    """Detecta si la conexión es hacia PostgreSQL / Supabase."""
+    """Detecta si la conexión es hacia PostgreSQL / Supabase en Vercel."""
     postgres_url = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL') or os.environ.get('SUPABASE_DATABASE_URL')
     postgres_host = os.environ.get('POSTGRES_HOST') or os.environ.get('DB_HOST', '')
     db_type = os.environ.get('DB_TYPE', '').lower()
@@ -28,13 +28,12 @@ def is_supabase_enabled():
 
     return False
 
-class PostgresCursorWrapper:
-    """Wrapper para hacer que el cursor de psycopg2 se comporte como el de PyMySQL."""
+class Pg8000CursorWrapper:
+    """Wrapper para hacer que pg8000 devuelva diccionarios al igual que PyMySQL DictCursor."""
     def __init__(self, cursor):
         self.cursor = cursor
 
     def execute(self, query, params=None):
-        # Convertir consultas MySQL comunes a PostgreSQL si es necesario
         query = query.replace('IFNULL(', 'COALESCE(')
         query = query.replace('CAST(p.fecha_prestamo AS CHAR)', 'CAST(p.fecha_prestamo AS VARCHAR)')
         query = query.replace('CAST(fecha_registro AS CHAR)', 'CAST(fecha_registro AS VARCHAR)')
@@ -42,18 +41,26 @@ class PostgresCursorWrapper:
             return self.cursor.execute(query, params)
         return self.cursor.execute(query)
 
+    def _to_dict(self, row):
+        if row is None or not self.cursor.description:
+            return row
+        cols = [col[0] for col in self.cursor.description]
+        return dict(zip(cols, row))
+
     def fetchone(self):
-        return self.cursor.fetchone()
+        row = self.cursor.fetchone()
+        return self._to_dict(row)
 
     def fetchall(self):
-        return self.cursor.fetchall()
+        rows = self.cursor.fetchall()
+        if not rows or not self.cursor.description:
+            return rows
+        cols = [col[0] for col in self.cursor.description]
+        return [dict(zip(cols, row)) for row in rows]
 
     @property
     def lastrowid(self):
-        try:
-            return self.cursor.fetchone()[0]
-        except Exception:
-            return None
+        return None
 
     def __enter__(self):
         return self
@@ -61,13 +68,13 @@ class PostgresCursorWrapper:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.cursor.close()
 
-class PostgresConnWrapper:
-    """Wrapper de conexión PostgreSQL."""
+class Pg8000ConnWrapper:
+    """Wrapper de conexión PostgreSQL con pg8000."""
     def __init__(self, conn):
         self.conn = conn
 
     def cursor(self):
-        return PostgresCursorWrapper(self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor))
+        return Pg8000CursorWrapper(self.conn.cursor())
 
     def commit(self):
         self.conn.commit()
@@ -76,25 +83,36 @@ class PostgresConnWrapper:
         self.conn.close()
 
 def get_db_connection():
-    """Obtiene una conexión a la base de datos (Supabase PostgreSQL o MySQL)."""
+    """Obtiene una conexión a la base de datos (Supabase en Vercel o MySQL)."""
     postgres_url = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL') or os.environ.get('SUPABASE_DATABASE_URL')
 
-    if is_supabase_enabled() and IS_POSTGRES:
+    if is_supabase_enabled() and IS_PG8000:
+        ssl_ctx = ssl.create_default_context()
+        ssl_ctx.check_hostname = False
+        ssl_ctx.verify_mode = ssl.CERT_NONE
+
         if postgres_url:
-            # Fix para Vercel si la URL empieza con postgres://
             if postgres_url.startswith("postgres://"):
                 postgres_url = postgres_url.replace("postgres://", "postgresql://", 1)
-            conn = psycopg2.connect(postgres_url)
+            parsed = urlparse(postgres_url)
+            conn = pg8000.dbapi.connect(
+                user=parsed.username,
+                password=parsed.password,
+                host=parsed.hostname,
+                port=parsed.port or 5432,
+                database=parsed.path.lstrip('/'),
+                ssl_context=ssl_ctx
+            )
         else:
-            conn = psycopg2.connect(
+            conn = pg8000.dbapi.connect(
                 host=os.environ.get('POSTGRES_HOST', os.environ.get('DB_HOST', 'localhost')),
                 port=int(os.environ.get('POSTGRES_PORT', os.environ.get('DB_PORT', 5432))),
                 user=os.environ.get('POSTGRES_USER', os.environ.get('DB_USER', 'postgres')),
                 password=os.environ.get('POSTGRES_PASSWORD', os.environ.get('DB_PASSWORD', '')),
-                dbname=os.environ.get('POSTGRES_DATABASE', os.environ.get('DB_NAME', 'postgres')),
-                sslmode='require'
+                database=os.environ.get('POSTGRES_DATABASE', os.environ.get('DB_NAME', 'postgres')),
+                ssl_context=ssl_ctx
             )
-        return PostgresConnWrapper(conn)
+        return Pg8000ConnWrapper(conn)
 
     # De lo contrario, usar PyMySQL (MySQL Local o Aiven)
     host = os.environ.get('DB_HOST', 'localhost')
@@ -123,7 +141,7 @@ def get_db_connection():
 def init_db():
     """Inicializa la base de datos según el motor configurado."""
     try:
-        if is_supabase_enabled() and IS_POSTGRES:
+        if is_supabase_enabled() and IS_PG8000:
             conn = get_db_connection()
             schema_path = os.path.join(os.path.dirname(__file__), 'schema_supabase.sql')
             if not os.path.exists(schema_path):
@@ -139,7 +157,7 @@ def init_db():
                     cursor.execute(command)
             conn.commit()
             conn.close()
-            print("[SUCCESS] Base de datos Supabase (PostgreSQL) inicializada correctamente.")
+            print("[SUCCESS] Base de datos Supabase (PostgreSQL) inicializada correctamente con pg8000.")
             return True
         else:
             conn = get_db_connection()
