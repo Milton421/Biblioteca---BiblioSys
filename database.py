@@ -2,38 +2,52 @@ import os
 import pymysql
 import pymysql.cursors
 
-DB_CONFIG = {
-    'host': os.environ.get('DB_HOST', 'localhost'),
-    'port': int(os.environ.get('DB_PORT', 3306)),
-    'user': os.environ.get('DB_USER', 'root'),
-    'password': os.environ.get('DB_PASSWORD', ''),
-    'database': os.environ.get('DB_NAME', os.environ.get('DB_DATABASE', 'biblioteca_db')),
-    'charset': 'utf8mb4',
-    'cursorclass': pymysql.cursors.DictCursor
-}
+def get_db_kwargs(include_db=True):
+    host = os.environ.get('DB_HOST', 'localhost')
+    port = int(os.environ.get('DB_PORT', 3306))
+    user = os.environ.get('DB_USER', 'root')
+    password = os.environ.get('DB_PASSWORD', '')
+    database_name = os.environ.get('DB_NAME', os.environ.get('DB_DATABASE', 'biblioteca_db'))
+    ssl_env = os.environ.get('DB_SSL_MODE', os.environ.get('DB_SSL', '')).lower()
+
+    kwargs = {
+        'host': host,
+        'port': port,
+        'user': user,
+        'password': password,
+        'charset': 'utf8mb4',
+        'cursorclass': pymysql.cursors.DictCursor,
+        'autocommit': True
+    }
+
+    if include_db:
+        kwargs['database'] = database_name
+
+    if ssl_env in ('true', '1', 'required', 'require') or 'aivencloud.com' in host:
+        kwargs['ssl'] = {'ssl': True}
+
+    return kwargs, database_name
 
 def get_server_connection():
     """Conecta al servidor MySQL (sin especificar base de datos) para crearla si no existe."""
-    return pymysql.connect(
-        host=DB_CONFIG['host'],
-        port=DB_CONFIG['port'],
-        user=DB_CONFIG['user'],
-        password=DB_CONFIG['password'],
-        charset='utf8mb4',
-        autocommit=True
-    )
+    kwargs, _ = get_db_kwargs(include_db=False)
+    return pymysql.connect(**kwargs)
 
 def get_db_connection():
     """Obtiene una conexión a la base de datos configurada."""
-    return pymysql.connect(**DB_CONFIG, autocommit=True)
+    kwargs, _ = get_db_kwargs(include_db=True)
+    return pymysql.connect(**kwargs)
 
 def init_db():
     """Lee schema.sql e inicializa la base de datos y sus tablas."""
     try:
+        kwargs, db_name = get_db_kwargs(include_db=True)
+
+        # Intentar crear la DB si el usuario tiene permisos
         try:
             conn_server = get_server_connection()
             with conn_server.cursor() as cursor:
-                cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_CONFIG['database']}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
+                cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
             conn_server.close()
         except Exception:
             pass
@@ -50,7 +64,7 @@ def init_db():
                 for command in commands:
                     cursor.execute(command)
         conn.close()
-        print("[SUCCESS] Base de datos 'biblioteca_db' inicializada correctamente.")
+        print(f"[SUCCESS] Base de datos '{db_name}' inicializada correctamente.")
         return True
     except Exception as e:
         print(f"[ERROR] No se pudo inicializar la base de datos: {e}")
