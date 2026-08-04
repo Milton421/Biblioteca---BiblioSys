@@ -858,3 +858,136 @@ tr:hover td {
     .navbar-top { padding: 0 1.5rem; }
     .content-body { padding: 1.5rem; }
 }
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.85rem;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .section-header .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .search-filter-bar {
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    .search-filter-bar .search-box,
+    .search-filter-bar select {
+        width: 100%;
+    }
+
+    .books-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .book-cover-wrap {
+        height: 190px;
+    }
+
+    .modal-container {
+        width: calc(100vw - 2rem);
+        max-width: 100%;
+        padding: 1.5rem 1.2rem;
+        margin: 1rem;
+    }
+
+    .modal-actions {
+        flex-direction: column-reverse;
+        gap: 0.5rem;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .toast-container {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+        align-items: center;
+    }
+
+    .toast {
+        min-width: 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 540px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        position: fixed;
+        bottom: 0;
+        top: auto;
+        left: 0;
+        right: 0;
+        width: 100% !important;
+        height: 60px;
+        flex-direction: row;
+        border-right: none;
+        border-top: 1px solid var(--border-light);
+        z-index: 999;
+        padding: 0 0.5rem;
+        justify-content: space-around;
+        background: var(--bg-surface);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .sidebar .brand { display: none; }
+
+    .nav-menu {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        width: 100%;
+        padding: 0;
+        gap: 0;
+    }
+
+    .nav-item {
+        margin: 0;
+    }
+
+    .nav-item a {
+        padding: 0.6rem 0.8rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        max-width: 100vw !important;
+        padding-bottom: 75px;
+    }
+
+    .navbar-top {
+        padding: 0.75rem 1rem;
+    }
+
+    .content-body {
+        padding: 1rem 0.85rem;
+    }
+
+    .stat-card {
+        padding: 1.1rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+}
+

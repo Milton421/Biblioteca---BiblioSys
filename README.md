@@ -1,67 +1,102 @@
-# 📚 BiblioSys — Sistema de Gestión de Biblioteca
+<div align="center">
 
-Un sistema web moderno, ágil y elegante para la administración de bibliotecas. Permite gestionar inventarios de libros, socios, préstamos, devoluciones y cálculo automático de multas.
+  <h1>BiblioSys</h1>
 
-🌐 **Demo en línea (Producción):** [https://biblioteca-biblio-sys.vercel.app](https://biblioteca-biblio-sys.vercel.app)
+  <p><b>Sistema web moderno e intuitivo para la gestión integral de bibliotecas, control de inventario de libros, registro de socios, préstamos y seguimiento de multas.</b></p>
 
----
+  <p>
+    <a href="https://biblioteca-biblio-sys.vercel.app" target="_blank">
+      <img src="https://img.shields.io/badge/Ver_Aplicación-Producción-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel App" />
+    </a>
+  </p>
 
-## ✨ Características Principales
+  <p>
+    <img src="https://img.shields.io/badge/PYTHON-3.9+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/FLASK-3.0+-000000?style=flat-square&logo=flask&logoColor=white" alt="Flask" />
+    <img src="https://img.shields.io/badge/POSTGRESQL-SUPABASE-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/JAVASCRIPT-ES6+-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript" />
+    <img src="https://img.shields.io/badge/VERCEL-SERVERLESS-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel" />
+  </p>
 
-* **📊 Dashboard Integrado:** Métricas en tiempo real de inventario, socios activos, préstamos en curso y multas pendientes.
-* **📖 Catálogo de Libros:** Control de stock total y disponible, categorías y búsqueda instantánea por título, autor o ISBN.
-* **👥 Gestión de Socios:** Registro y control de información de usuarios con datos de contacto.
-* **🔄 Préstamos y Devoluciones:** Asignación de plazos, devolución de ejemplares y actualización automática de disponibilidad.
-* **⚠️ Sistema de Multas:** Generación de penalizaciones por entregas tardías y gestión de pagos.
-
----
-
-## 🛠️ Tecnologías
-
-* **Frontend:** HTML5, CSS3 (Diseño responsivo moderno), JavaScript Vanilla (SPA / Fetch API).
-* **Backend:** Python (Flask REST API).
-* **Base de Datos:** Supabase (PostgreSQL) en Producción / Compatible con MySQL.
-* **Hosting & Cloud:** Vercel (Despliegue continuo serverless).
+</div>
 
 ---
 
-## 📁 Estructura del Proyecto
+## Características
+
+- **Dashboard General:** Resumen ejecutivo de métricas clave y actividad reciente.
+- **Catálogo de Libros:** Control de inventario, disponibilidad en tiempo real y filtrado por categorías.
+- **Gestión de Socios:** Control de registro y estado de miembros de la biblioteca.
+- **Préstamos y Devoluciones:** Automatización de plazos de entrega y actualización inmediata de existencias.
+- **Control de Multas:** Cálculo y seguimiento de penalizaciones por devoluciones tardías.
+
+---
+
+## Stack Tecnológico
+
+| Capa | Tecnología |
+| --- | --- |
+| **Frontend** | HTML5, CSS3, JavaScript Vanilla (SPA) |
+| **Backend** | Python (Flask REST API) |
+| **Base de Datos** | Supabase (PostgreSQL) / MySQL |
+| **Despliegue** | Vercel |
+
+---
+
+## Estructura del Proyecto
 
 ```text
 biblioteca/
-├── app.py                  # Servidor Flask y API RESTful
-├── database.py             # Conexión agnóstica a base de datos (PostgreSQL / MySQL)
-├── schema_supabase.sql     # Script SQL para Supabase (PostgreSQL)
-├── schema.sql              # Script SQL para MySQL
-├── vercel.json             # Configuración de despliegue en Vercel
-├── requirements.txt        # Dependencias de Python
-├── index.html              # Interfaz de usuario (SPA)
-└── static/                 # Hojas de estilo (CSS) y scripts (JS)
+├── app.py                  # API RESTful en Flask y definición de endpoints
+├── database.py             # Capa de abstracción y conexión a PostgreSQL / MySQL
+├── schema_supabase.sql     # Estructura DDL y datos semilla para Supabase (PostgreSQL)
+├── schema.sql              # Estructura DDL para bases de datos MySQL
+├── vercel.json             # Configuración de rutas y despliegue para Vercel
+├── requirements.txt        # Librerías y dependencias de Python
+├── index.html              # Interfaz de usuario principal (Single Page Application)
+└── static/                 # Recursos estáticos del sistema
+    ├── css/
+    │   └── style.css       # Hoja de estilos global y diseño responsivo
+    ├── js/
+    │   └── main.js         # Lógica del cliente, controladores SPA y Fetch API
+    └── favicon.svg         # Icono oficial de la aplicación
 ```
 
 ---
 
-## 🚀 Instalación y Ejecución Local
+## Instalación y Ejecución Local
 
-1. **Clonar el repositorio:**
-   ```bash
-   git clone https://github.com/Milton421/Biblioteca---BiblioSys.git
-   cd Biblioteca---BiblioSys
-   ```
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/Milton421/Biblioteca---BiblioSys.git
+cd Biblioteca---BiblioSys
+```
 
-2. **Instalar dependencias:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 2. Crear y activar entorno virtual (Opcional)
+```bash
+# En Windows (PowerShell):
+python -m venv venv
+.\venv\Scripts\activate
 
-3. **Ejecutar el servidor local:**
-   ```bash
-   python app.py
-   ```
-   Abre `http://127.0.0.1:5050` en tu navegador.
+# En Linux / macOS:
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Instalar dependencias
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Iniciar la aplicación
+```bash
+python app.py
+```
+
+Accede desde tu navegador en: `http://127.0.0.1:5050`
 
 ---
 
-## 📝 Licencia
+## Licencia
 
-Desarrollado para la gestión eficiente y modernización de bibliotecas.
+Licencia MIT — Desarrollado por Milton.
