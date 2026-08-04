@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Biblioteca | Guatemala</title>
+    <link rel="icon" type="image/svg+xml" href="static/favicon.svg">
+    <link rel="shortcut icon" href="static/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body data-active-section="dashboard">
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="bi bi-book-half"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>BiblioSys</h1>
+                </div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <a href="/" data-section="dashboard">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item ">
+                    <a href="/libros" data-section="libros">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                        <span>Catálogo Libros</span>
+                    </a>
+                </li>
+                <li class="nav-item ">
+                    <a href="/usuarios" data-section="usuarios">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Socios / Usuarios</span>
+                    </a>
+                </li>
+                <li class="nav-item ">
+                    <a href="/prestamos" data-section="prestamos">
+                        <i class="bi bi-arrow-left-right"></i>
+                        <span>Préstamos</span>
+                    </a>
+                </li>
+                <li class="nav-item ">
+                    <a href="/multas" data-section="multas">
+                        <i class="bi bi-receipt-cutoff"></i>
+                        <span>Multas y Pagos</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="main-content">
+            
+            <!-- NAVBAR SUPERIOR CENTRADA -->
+            <header class="navbar-top">
+                <div class="nav-search-bar">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="global-search" placeholder="Buscar libro por título, autor o ISBN...">
+                </div>
+            </header>
+
+            <div class="content-body">
+                
+                <!-- DASHBOARD -->
+                <section id="section-dashboard" class="view-section active">
+                    <div class="top-header">
+                        <div class="page-title">
+                            <h2>Panel de Control</h2>
+                            <p>Resumen general del estado de la biblioteca y actividades recientes.</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" onclick="abrirModalPrestamo()">
+                                <i class="bi bi-plus-lg"></i> Registrar Préstamo
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-top">
+                                <div class="stat-icon indigo">
+                                    <i class="bi bi-journals"></i>
+                                </div>
+                                <span class="stat-chip blue">Inventario</span>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="stat-total-libros">0</div>
+                                <div class="stat-label">Total Libros Registrados</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card-top">
+                                <div class="stat-icon violet">
+                                    <i class="bi bi-book"></i>
+                                </div>
+                                <span class="stat-chip purple">En Curso</span>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="stat-libros-prestados">0</div>
+                                <div class="stat-label">Préstamos Activos</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card-top">
+                                <div class="stat-icon emerald">
+                                    <i class="bi bi-person-check-fill"></i>
+                                </div>
+                                <span class="stat-chip green">Activos</span>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="stat-usuarios-activos">0</div>
+                                <div class="stat-label">Socios Registrados</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card-top">
+                                <div class="stat-icon rose">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                </div>
+                                <span class="stat-chip red">Pendientes</span>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="stat-multas-pendientes">Q 0.00</div>
+                                <div class="stat-label">Multas por Cobrar</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-card">
+                        <div style="padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-color);">
+                            <h3 style="font-size: 1.05rem; font-weight: 700;">Últimos Préstamos Registrados</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Libro</th>
+                                        <th>Usuario / Socio</th>
+                                        <th>Fecha Préstamo</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-recientes-body">
+                                    <!-- JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- CATÁLOGO DE LIBROS -->
+                <section id="section-libros" class="view-section ">
+                    <div class="top-header">
+                        <div class="page-title">
+                            <h2>Catálogo de Libros</h2>
+                            <p>Administra el inventario de libros, stock y categorías.</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" onclick="abrirModalLibro()">
+                                <i class="bi bi-plus-lg"></i> Nuevo Libro
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="controls-bar">
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="search-libros" placeholder="Buscar por título, autor o ISBN...">
+                        </div>
+                        <div class="filter-group">
+                            <select id="filter-categoria" class="select-input">
+                                <option value="">Todas las Categorías</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="books-grid" id="books-grid">
+                        <!-- JS -->
+                    </div>
+                </section>
+
+
+                <!-- USUARIOS -->
+                <section id="section-usuarios" class="view-section ">
+                    <div class="top-header">
+                        <div class="page-title">
+                            <h2>Socios y Usuarios</h2>
+                            <p>Gestión de miembros registrados en Guatemala.</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" onclick="abrirModalUsuario()">
+                                <i class="bi bi-person-plus-fill"></i> Nuevo Socio
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="controls-bar">
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="search-usuarios" placeholder="Buscar por nombre, correo o teléfono...">
+                        </div>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nombre Completo</th>
+                                        <th>Correo Electrónico</th>
+                                        <th>Teléfono</th>
+                                        <th>Fecha Registro</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-usuarios-body">
+                                    <!-- JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- PRÉSTAMOS -->
+                <section id="section-prestamos" class="view-section ">
+                    <div class="top-header">
+                        <div class="page-title">
+                            <h2>Gestión de Préstamos</h2>
+                            <p>Registra y administra los préstamos y devoluciones.</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" onclick="abrirModalPrestamo()">
+                                <i class="bi bi-plus-lg"></i> Registrar Préstamo
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="controls-bar">
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="search-prestamos" placeholder="Buscar préstamo por socio o libro...">
+                        </div>
+                        <div class="filter-group">
+                            <label style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600;">Estado:</label>
+                            <select id="filter-prestamo-estado" class="select-input">
+                                <option value="ALL">Todos los Estados</option>
+                                <option value="ACTIVO">Activos</option>
+                                <option value="VENCIDO">Vencidos</option>
+                                <option value="DEVUELTO">Devueltos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Libro</th>
+                                        <th>Usuario / Socio</th>
+                                        <th>Fecha Préstamo</th>
+                                        <th>Devolución Esperada</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-prestamos-body">
+                                    <!-- JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- MULTAS Y PAGOS -->
+                <section id="section-multas" class="view-section ">
+                    <div class="top-header">
+                        <div class="page-title">
+                            <h2>Multas y Sanciones (Quetzales)</h2>
+                            <p>Registro de penalizaciones en Quetzales (Q5.00 GTQ por día de retraso).</p>
+                        </div>
+                    </div>
+
+                    <div class="controls-bar">
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="search-multas" placeholder="Buscar multa por socio o libro...">
+                        </div>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Usuario / Socio</th>
+                                        <th>Libro</th>
+                                        <th>Monto (Retraso)</th>
+                                        <th>Estado Multa</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-multas-body">
+                                    <!-- JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+
+
+    <!-- MODAL DE CONFIRMACIÓN -->
+    <div class="modal-overlay" id="modal-confirm">
+        <div class="modal-container" style="max-width: 400px; text-align: center;">
+            <div class="confirm-icon-wrap" style="width: 50px; height: 50px; border-radius: 50%; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1rem;" id="confirm-icon">
+                <i class="bi bi-question-circle"></i>
+            </div>
+            <h3 id="confirm-title" style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Confirmar Acción</h3>
+            <p id="confirm-message" style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.5rem;">¿Estás seguro de realizar esta acción?</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button type="button" class="btn btn-secondary" id="btn-confirm-cancel" style="flex: 1;">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm-accept" style="flex: 1;">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+
+    <!-- MODAL NUEVO / EDITAR LIBRO -->
+    <div class="modal-overlay" id="modal-libro">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-libro-titulo">Registrar Nuevo Libro</h3>
+                <button class="btn-close-modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form id="form-libro">
+                <input type="hidden" id="libro-id">
+                <div class="form-group">
+                    <label>Título del Libro *</label>
+                    <input type="text" id="libro-titulo-input" required placeholder="Ej. Don Quijote de la Mancha">
+                </div>
+                <div class="form-group">
+                    <label>Autor *</label>
+                    <input type="text" id="libro-autor-input" required placeholder="Ej. Miguel de Cervantes">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <div class="form-group" style="flex:1;">
+                        <label>ISBN</label>
+                        <input type="text" id="libro-isbn-input" placeholder="Ej. 978-8424115456">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Año Publicación</label>
+                        <input type="number" id="libro-anio-input" placeholder="Ej. 1605">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Categoría</label>
+                        <select id="libro-categoria">
+                            <!-- JS -->
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Stock Total (Copias)</label>
+                        <input type="number" id="libro-stock-input" min="1" value="1" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>URL de Portada (Opcional)</label>
+                    <input type="url" id="libro-portada-input" placeholder="https://images.unsplash.com/...">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary btn-close-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Libro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL NUEVO / EDITAR USUARIO -->
+    <div class="modal-overlay" id="modal-usuario">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-usuario-titulo">Registrar Nuevo Socio</h3>
+                <button class="btn-close-modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form id="form-usuario">
+                <input type="hidden" id="usuario-id">
+                <div class="form-group">
+                    <label>Nombre Completo *</label>
+                    <input type="text" id="usuario-nombre-input" required placeholder="Ej. Carlos Rodas">
+                </div>
+                <div class="form-group">
+                    <label>Correo Electrónico *</label>
+                    <input type="email" id="usuario-email-input" required placeholder="carlos.rodas@email.com.gt">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono (Guatemala)</label>
+                    <input type="text" id="usuario-telefono-input" placeholder="+502 2456 7890">
+                </div>
+                <div class="form-group">
+                    <label>Dirección</label>
+                    <input type="text" id="usuario-direccion-input" placeholder="Av. La Reforma 12-01, Zona 10, Guatemala">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary btn-close-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL REGISTRAR PRÉSTAMO -->
+    <div class="modal-overlay" id="modal-prestamo">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Registrar Nuevo Préstamo</h3>
+                <button class="btn-close-modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form id="form-prestamo">
+                <div class="form-group">
+                    <label>Seleccionar Libro Disponible *</label>
+                    <select id="prestamo-libro" required>
+                        <!-- JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Seleccionar Usuario / Socio *</label>
+                    <select id="prestamo-usuario" required>
+                        <!-- JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Días de Préstamo (Plazo)</label>
+                    <select id="prestamo-dias">
+                        <option value="7">7 Días (1 semana)</option>
+                        <option value="14" selected>14 Días (2 semanas)</option>
+                        <option value="21">21 Días (3 semanas)</option>
+                        <option value="30">30 Días (1 mes)</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary btn-close-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Préstamo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN SCRIPT -->
+    <script src="static/js/main.js"></script>
+</body>
+</html>
