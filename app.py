@@ -1,4 +1,5 @@
 import os
+import datetime
 from flask import Flask, render_template, request, jsonify
 import database
 
@@ -38,37 +39,41 @@ def multas_page():
 def get_stats():
     conn = database.get_db_connection()
     if not conn:
-        return jsonify({'error': 'No se pudo conectar a la base de datos MySQL en XAMPP.'}), 500
+        return jsonify({'error': 'No se pudo conectar a la base de datos.'}), 500
     try:
         with conn.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) AS total FROM libros")
-            total_libros = cursor.fetchone()['total']
+            res_libros = cursor.fetchone()
+            total_libros = res_libros['total'] if res_libros else 0
 
             cursor.execute("SELECT COUNT(*) AS total FROM prestamos WHERE estado = 'ACTIVO' OR estado = 'VENCIDO'")
-            libros_prestados = cursor.fetchone()['total']
+            res_prestados = cursor.fetchone()
+            libros_prestados = res_prestados['total'] if res_prestados else 0
 
-            cursor.execute("SELECT COUNT(*) AS total FROM usuarios WHERE activo = 1")
-            usuarios_activos = cursor.fetchone()['total']
+            cursor.execute("SELECT COUNT(*) AS total FROM usuarios WHERE activo = true OR activo = 1")
+            res_usuarios = cursor.fetchone()
+            usuarios_activos = res_usuarios['total'] if res_usuarios else 0
 
-            cursor.execute("SELECT IFNULL(SUM(monto), 0) AS total FROM multas WHERE pagada = 0")
-            multas_pendientes = cursor.fetchone()['total']
+            cursor.execute("SELECT COALESCE(SUM(monto), 0) AS total FROM multas WHERE pagada = false OR pagada = 0")
+            res_multas = cursor.fetchone()
+            multas_pendientes = float(res_multas['total']) if res_multas else 0.0
 
             cursor.execute("""
                 SELECT p.id, l.titulo, u.nombre AS usuario, 
-                       CAST(p.fecha_prestamo AS CHAR) AS fecha_prestamo, 
+                       CAST(p.fecha_prestamo AS VARCHAR) AS fecha_prestamo, 
                        p.estado
                 FROM prestamos p
                 JOIN libros l ON p.libro_id = l.id
                 JOIN usuarios u ON p.usuario_id = u.id
                 ORDER BY p.id DESC LIMIT 5
             """)
-            recientes = cursor.fetchall()
+            recientes = cursor.fetchall() or []
 
             return jsonify({
                 'total_libros': total_libros,
                 'libros_prestados': libros_prestados,
                 'usuarios_activos': usuarios_activos,
-                'multas_pendientes': float(multas_pendientes),
+                'multas_pendientes': multas_pendientes,
                 'recientes': recientes
             })
     except Exception as e:
@@ -76,16 +81,16 @@ def get_stats():
     finally:
         conn.close()
 
-#  CATEGORÍAS
+# CATEGORÍAS
 @app.route('/api/categorias', methods=['GET'])
 def get_categorias():
     conn = database.get_db_connection()
     if not conn:
-        return jsonify({'error': 'Error de conexión MySQL'}), 500
+        return jsonify({'error': 'Error de conexión a la base de datos'}), 500
     try:
         with conn.cursor() as cursor:
             cursor.execute("SELECT * FROM categorias ORDER BY nombre ASC")
-            categorias = cursor.fetchall()
+            categorias = cursor.fetchall() or []
             return jsonify(categorias)
     finally:
         conn.close()
@@ -119,11 +124,11 @@ def get_libros():
 
     conn = database.get_db_connection()
     if not conn:
-        return jsonify({'error': 'Error de conexión MySQL'}), 500
+        return jsonify({'error': 'Error de conexión a la base de datos'}), 500
     try:
         with conn.cursor() as cursor:
             cursor.execute(sql, params)
-            libros = cursor.fetchall()
+            libros = cursor.fetchall() or []
             return jsonify(libros)
     finally:
         conn.close()
@@ -164,7 +169,7 @@ def add_libro():
             """
             cursor.execute(sql, (titulo, autor, isbn, categoria_id, anio_publicacion, stock_total, stock_total, portada_url))
             conn.commit()
-            return jsonify({'message': 'Libro registrado exitosamente', 'id': cursor.lastrowid}), 201
+            return jsonify({'message': 'Libro registrado exitosamente', 'id': getattr(cursor, 'lastrowid', None)}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
@@ -224,7 +229,7 @@ def delete_libro(libro_id):
 @app.route('/api/usuarios', methods=['GET'])
 def get_usuarios():
     query = request.args.get('q', '').strip()
-    sql = "SELECT id, nombre, email, telefono, direccion, CAST(fecha_registro AS CHAR) AS fecha_registro, activo FROM usuarios WHERE 1=1"
+    sql = "SELECT id, nombre, email, telefono, direccion, CAST(fecha_registro AS VARCHAR) AS fecha_registro, activo FROM usuarios WHERE 1=1"
     params = []
 
     if query:
@@ -238,7 +243,7 @@ def get_usuarios():
     try:
         with conn.cursor() as cursor:
             cursor.execute(sql, params)
-            usuarios = cursor.fetchall()
+            usuarios = cursor.fetchall() or []
             return jsonify(usuarios)
     finally:
         conn.close()
@@ -257,10 +262,11 @@ def add_usuario():
     conn = database.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            sql = "INSERT INTO usuarios (nombre, email, telefono, direccion, fecha_registro) VALUES (%s, %s, %s, %s, CURDATE())"
-            cursor.execute(sql, (nombre, email, telefono, direccion))
+            fecha_hoy = datetime.date.today()
+            sql = "INSERT INTO usuarios (nombre, email, telefono, direccion, fecha_registro) VALUES (%s, %s, %s, %s, %s)"
+            cursor.execute(sql, (nombre, email, telefono, direccion, fecha_hoy))
             conn.commit()
-            return jsonify({'message': 'Socio registrado exitosamente', 'id': cursor.lastrowid}), 201
+            return jsonify({'message': 'Socio registrado exitosamente', 'id': getattr(cursor, 'lastrowid', None)}), 201
     except Exception as e:
         return jsonify({'error': 'El correo ya está registrado'}), 400
     finally:
@@ -297,7 +303,7 @@ def delete_usuario(usuario_id):
     finally:
         conn.close()
 
-# GESTIÓN DE PRÉSTAMOS 
+# GESTIÓN DE PRÉSTAMOS
 @app.route('/api/prestamos', methods=['GET'])
 def get_prestamos():
     query = request.args.get('q', '').strip()
@@ -305,9 +311,9 @@ def get_prestamos():
 
     sql = """
         SELECT p.id, p.libro_id, p.usuario_id, 
-               CAST(p.fecha_prestamo AS CHAR) AS fecha_prestamo, 
-               CAST(p.fecha_devolucion_esperada AS CHAR) AS fecha_devolucion_esperada, 
-               CAST(p.fecha_devolucion_real AS CHAR) AS fecha_devolucion_real, 
+               CAST(p.fecha_prestamo AS VARCHAR) AS fecha_prestamo, 
+               CAST(p.fecha_devolucion_esperada AS VARCHAR) AS fecha_devolucion_esperada, 
+               CAST(p.fecha_devolucion_real AS VARCHAR) AS fecha_devolucion_real, 
                p.estado,
                l.titulo AS libro_titulo,
                u.nombre AS usuario_nombre
@@ -332,15 +338,16 @@ def get_prestamos():
     conn = database.get_db_connection()
     try:
         with conn.cursor() as cursor:
+            fecha_hoy = datetime.date.today()
             cursor.execute("""
                 UPDATE prestamos 
                 SET estado = 'VENCIDO' 
-                WHERE estado = 'ACTIVO' AND fecha_devolucion_esperada < CURDATE()
-            """)
+                WHERE estado = 'ACTIVO' AND fecha_devolucion_esperada < %s
+            """, (fecha_hoy,))
             conn.commit()
 
             cursor.execute(sql, params)
-            prestamos = cursor.fetchall()
+            prestamos = cursor.fetchall() or []
             return jsonify(prestamos)
     finally:
         conn.close()
@@ -360,11 +367,14 @@ def add_prestamo():
             if not libro or libro['stock_disponible'] <= 0:
                 return jsonify({'error': 'El libro no tiene copias disponibles'}), 400
 
+            fecha_prestamo = datetime.date.today()
+            fecha_devolucion_esperada = fecha_prestamo + datetime.timedelta(days=dias_prestamo)
+
             sql_prestamo = """
                 INSERT INTO prestamos (libro_id, usuario_id, fecha_prestamo, fecha_devolucion_esperada, estado)
-                VALUES (%s, %s, CURDATE(), DATE_ADD(CURDATE(), INTERVAL %s DAY), 'ACTIVO')
+                VALUES (%s, %s, %s, %s, 'ACTIVO')
             """
-            cursor.execute(sql_prestamo, (libro_id, usuario_id, dias_prestamo))
+            cursor.execute(sql_prestamo, (libro_id, usuario_id, fecha_prestamo, fecha_devolucion_esperada))
 
             cursor.execute("UPDATE libros SET stock_disponible = stock_disponible - 1 WHERE id = %s", (libro_id,))
             conn.commit()
@@ -382,27 +392,37 @@ def devolver_prestamo(prestamo_id):
             if not prestamo or prestamo['estado'] == 'DEVUELTO':
                 return jsonify({'error': 'El préstamo ya fue devuelto o no existe'}), 400
 
+            fecha_hoy = datetime.date.today()
             cursor.execute("""
                 UPDATE prestamos 
-                SET estado = 'DEVUELTO', fecha_devolucion_real = CURDATE() 
+                SET estado = 'DEVUELTO', fecha_devolucion_real = %s 
                 WHERE id = %s
-            """, (prestamo_id,))
+            """, (fecha_hoy, prestamo_id))
 
             cursor.execute("UPDATE libros SET stock_disponible = stock_disponible + 1 WHERE id = %s", (prestamo['libro_id'],))
 
-            # Calcular multa si se entregó tarde (Q5.00 GTQ por día)
-            cursor.execute("SELECT DATEDIFF(CURDATE(), %s) AS dias_retraso", (prestamo['fecha_devolucion_esperada'],))
-            res_dias = cursor.fetchone()
-            dias_retraso = res_dias['dias_retraso'] if res_dias else 0
+            # Calcular diferencia de días en Python (100% agnóstico a la DB)
+            esperada = prestamo['fecha_devolucion_esperada']
+            if isinstance(esperada, str):
+                esperada = datetime.datetime.strptime(esperada, "%Y-%m-%d").date()
+
+            dias_retraso = (fecha_hoy - esperada).days if esperada else 0
 
             monto_multa = 0.00
             if dias_retraso > 0:
                 monto_multa = dias_retraso * 5.00
-                cursor.execute("""
-                    INSERT INTO multas (prestamo_id, monto, dias_retraso, pagada)
-                    VALUES (%s, %s, %s, 0)
-                    ON DUPLICATE KEY UPDATE monto = %s, dias_retraso = %s
-                """, (prestamo_id, monto_multa, dias_retraso, monto_multa, dias_retraso))
+                if database.is_supabase_enabled():
+                    cursor.execute("""
+                        INSERT INTO multas (prestamo_id, monto, dias_retraso, pagada)
+                        VALUES (%s, %s, %s, false)
+                        ON CONFLICT (prestamo_id) DO UPDATE SET monto = EXCLUDED.monto, dias_retraso = EXCLUDED.dias_retraso
+                    """, (prestamo_id, monto_multa, dias_retraso))
+                else:
+                    cursor.execute("""
+                        INSERT INTO multas (prestamo_id, monto, dias_retraso, pagada)
+                        VALUES (%s, %s, %s, 0)
+                        ON DUPLICATE KEY UPDATE monto = %s, dias_retraso = %s
+                    """, (prestamo_id, monto_multa, dias_retraso, monto_multa, dias_retraso))
 
             conn.commit()
 
@@ -414,7 +434,7 @@ def devolver_prestamo(prestamo_id):
     finally:
         conn.close()
 
-# GESTIÓN DE MULTAS 
+# GESTIÓN DE MULTAS
 @app.route('/api/multas', methods=['GET'])
 def get_multas():
     query = request.args.get('q', '').strip()
@@ -440,7 +460,7 @@ def get_multas():
     try:
         with conn.cursor() as cursor:
             cursor.execute(sql, params)
-            multas = cursor.fetchall()
+            multas = cursor.fetchall() or []
             return jsonify(multas)
     finally:
         conn.close()
@@ -450,7 +470,10 @@ def pagar_multa(multa_id):
     conn = database.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute("UPDATE multas SET pagada = 1 WHERE id = %s", (multa_id,))
+            if database.is_supabase_enabled():
+                cursor.execute("UPDATE multas SET pagada = true WHERE id = %s", (multa_id,))
+            else:
+                cursor.execute("UPDATE multas SET pagada = 1 WHERE id = %s", (multa_id,))
             conn.commit()
             return jsonify({'message': 'Multa marcada como pagada correctamente'})
     finally:
