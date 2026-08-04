@@ -515,15 +515,45 @@ async function guardarUsuario(e) {
     }
 }
 
+async function editarUsuario(id) {
+    try {
+        const res = await fetch('/api/usuarios');
+        const usuarios = await res.json();
+        const u = (usuarios || []).find(usr => usr.id === id);
+        if (!u) {
+            showToast('Socio no encontrado', 'error');
+            return;
+        }
+
+        document.getElementById('usuario-id').value = u.id;
+        document.getElementById('usuario-nombre-input').value = u.nombre || '';
+        document.getElementById('usuario-email-input').value = u.email || '';
+        document.getElementById('usuario-telefono-input').value = u.telefono || '';
+        document.getElementById('usuario-direccion-input').value = u.direccion || '';
+
+        document.getElementById('modal-usuario-titulo').textContent = 'Editar Socio / Usuario';
+        document.getElementById('modal-usuario').classList.add('active');
+    } catch (err) {
+        showToast('Error al obtener datos del socio', 'error');
+    }
+}
+
 async function eliminarUsuario(id) {
     const ok = await showConfirm('¿Deseas eliminar este socio de la biblioteca?', 'Eliminar Socio', true);
     if (!ok) return;
 
-    const res = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-        showToast('Socio eliminado correctamente', 'info');
-        loadUsuarios();
-        loadDashboardStats();
+    try {
+        const res = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast('Socio eliminado correctamente', 'info');
+            loadUsuarios();
+            loadDashboardStats();
+        } else {
+            const err = await res.json();
+            showToast(err.error || 'No se pudo eliminar el socio', 'error');
+        }
+    } catch (err) {
+        showToast('Error al eliminar el socio', 'error');
     }
 }
 
