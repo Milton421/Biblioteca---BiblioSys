@@ -100,6 +100,3 @@ Accede desde tu navegador en: `http://127.0.0.1:5050`
 pip install -r requirements.txt
 ```
 
-## Licencia
-
-Licencia MIT — Desarrollado por Milton.
