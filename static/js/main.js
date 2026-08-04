@@ -165,6 +165,7 @@ async function loadDashboardStats() {
 
         document.getElementById('stat-total-libros').textContent = data.total_libros || 0;
         document.getElementById('stat-libros-prestados').textContent = data.libros_prestados || 0;
+        document.getElementById('stat-usuarios-activos').textContent = data.usuarios_activos || 0;
         const multasVal = (data && data.multas_pendientes != null) ? Number(data.multas_pendientes) : 0;
         document.getElementById('stat-multas-pendientes').textContent = `Q ${multasVal.toFixed(2)}`;
 
