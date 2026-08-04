@@ -50,11 +50,17 @@ def get_stats():
             res_prestados = cursor.fetchone()
             libros_prestados = res_prestados['total'] if res_prestados else 0
 
-            cursor.execute("SELECT COUNT(*) AS total FROM usuarios WHERE activo = true OR activo = 1")
+            if database.is_supabase_enabled():
+                cursor.execute("SELECT COUNT(*) AS total FROM usuarios WHERE activo = true")
+            else:
+                cursor.execute("SELECT COUNT(*) AS total FROM usuarios WHERE activo = 1")
             res_usuarios = cursor.fetchone()
             usuarios_activos = res_usuarios['total'] if res_usuarios else 0
 
-            cursor.execute("SELECT COALESCE(SUM(monto), 0) AS total FROM multas WHERE pagada = false OR pagada = 0")
+            if database.is_supabase_enabled():
+                cursor.execute("SELECT COALESCE(SUM(monto), 0) AS total FROM multas WHERE pagada = false")
+            else:
+                cursor.execute("SELECT COALESCE(SUM(monto), 0) AS total FROM multas WHERE pagada = 0")
             res_multas = cursor.fetchone()
             multas_pendientes = float(res_multas['total']) if res_multas else 0.0
 
