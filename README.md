@@ -8,7 +8,7 @@ BiblioSys es un sistema web moderno diseñado para la administración integral d
 
 ## Módulos y Funcionalidades
 
-### Panel de Control (Dashboard)
+### Panel de Control - Dashboard
 - Visualización de métricas generales: total de libros, préstamos activos, socios registrados y saldo en multas pendientes.
 - Listado de actividad reciente con estado de transacciones en tiempo real.
 
