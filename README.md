@@ -5,7 +5,7 @@
   <p><b>Sistema web moderno e intuitivo para la gestión integral de bibliotecas, control de inventario de libros, registro de socios, préstamos y seguimiento de multas.</b></p>
 
   <p>
-    <a href="https://biblioteca-biblio-sys.vercel.app" target="_blank">
+    <a href="https://biblioteca-biblio-sys.vercel.app?_vercel_share=OQqR1WuF4NKjeSxP89f2oziu5j0lCEup" target="_blank">
       <img src="https://img.shields.io/badge/Ver_Aplicación-Producción-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel App" />
     </a>
   </p>
